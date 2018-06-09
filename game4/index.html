@@ -1,0 +1,296 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <title>Effect</title>
+  <link rel="stylesheet" href="styles.css" type="text/css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <audio id="mainMenuMusic">
+      <source src="sounds/main_menu.mp3" type="audio/mpeg" loop>
+    </audio>
+    <audio id="gameMusic">
+      <source src="sounds/game.mp3" type="audio/mpeg" loop>
+    </audio>
+    <audio id="shootSound">
+      <source src="sounds/shoot.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="explosionSound">
+      <source src="sounds/explosion.mp3" type="audio/mpeg">
+    </audio>
+<head>
+  <body>
+    <!-- Canvas -->
+    <canvas></canvas>
+    <!-- App -->
+    <div id='app'>
+      <!-- UI -->
+      <div id="ui">
+        <div id="message-score" class="message">
+          <h2 class="underlined">BEST</h2>
+          <h3>0</h3>
+        </div>
+
+        <div id="message-game-state" class="message">
+          <h2 class="underlined">END</h2>
+          <div>
+            <h3>SCORE: </h3>
+            <h3>BEST!</h3>
+          </div>
+        </div>
+
+        <button>PLAY</button>
+      </div>
+    </div>
+    <script>
+    var spriteObject = {
+		sourceX: 0,
+		sourceY: 0,
+		rotation: 0,
+		vx: 0,
+		vy: 0,
+		//Ускорение
+		accelerationX: 0,
+		accelerationY: 0,
+		//Скорость
+		speed: 0,
+		//Трение
+		friction: 0.96,
+
+		sourceWidth: 64,
+		sourceHeight: 64,
+		x: 0,
+		y: 0,
+		width: 64,
+		height: 64,
+		//Стороны спрайта
+		left: function() {
+			return this.x;
+		},
+		right: function() {
+			return this.x + this.width;
+		},
+		top: function() {
+			return this.y;
+		},
+		bottom: function() {
+			return this.y + this.height;
+		},
+		//Геттеры
+		centerX: function()
+		{
+		  return this.x + (this.width / 2);
+		},
+		centerY: function()
+		{
+		  return this.y + (this.height / 2);
+		},
+		halfWidth: function()
+		{
+		  return this.width / 2;
+		},
+		halfHeight: function()
+		{
+		  return this.height / 2;
+		}
+	};
+	var mouseX = 0;
+	var mouseY = 0;
+	canvas.addEventListener("mousemove", mousemoveHandler, false);
+	function mousemoveHandler(event)
+	{
+	 mouseX = event.pageX - canvas.offsetLeft;
+	 mouseY = event.pageY - canvas.offsetTop;
+	}
+	
+	
+	var button = document.getElementsByTagName('button')[0]
+	var canvas = document.querySelector("canvas");
+    var drawingSurface = canvas.getContext("2d");
+	button.addEventListener('click', function () {
+      gameState = PLAYING
+      button.style.display = 'none'
+    })
+	
+	var assetsToLoad = [];
+	
+	var image = new Image();
+    image.addEventListener("load", loadHandler, false);
+    image.src = "images/pirateArmada.png";
+	assetsToLoad.push(image);
+
+    //Загрузка звуков
+    var mainMenuMusic = document.querySelector("#mainMenuMusic");
+    mainMenuMusic.addEventListener("canplaythrough", loadHandler, false);
+    mainMenuMusic.load();
+    assetsToLoad.push(mainMenuMusic);
+
+    var gameMusic = document.querySelector("#gameMusic");
+    gameMusic.addEventListener("canplaythrough", loadHandler, false);
+    gameMusic.load();
+    assetsToLoad.push(gameMusic);
+
+    var shootSound = document.querySelector("#shootSound");
+    shootSound.addEventListener("canplaythrough", loadHandler, false);
+    shootSound.load();
+    assetsToLoad.push(shootSound);
+
+    var explosionSound = document.querySelector("#explosionSound");
+    explosionSound.addEventListener("canplaythrough", loadHandler, false);
+    explosionSound.load();
+    assetsToLoad.push(explosionSound);
+    //Счетчик числа загруженных ресурсов
+    var assetsLoaded = 0;
+	
+	button.addEventListener('click', function () {
+      // Transit to play state
+      gameState = PLAYING
+      mainMenuMusic.pause()
+      gameMusic.volume = 0.3
+      gameMusic.play()
+    });
+	//Состояния игры
+    var LOADING = 0;
+    var PLAYING = 1;
+    var OVER = 2;
+	
+	function loadHandler() {
+        assetsLoaded++;
+        if (assetsLoaded === assetsToLoad.length) {
+            //Отключение отслеживания событий загрузки ресурсов
+            image.removeEventListener("load", loadHandler, false);
+            gameMusic.removeEventListener("canplaythrough",
+                loadHandler, false);
+            mainMenuMusic.removeEventListener("canplaythrough",
+                loadHandler, false);
+            shootSound.removeEventListener("canplaythrough",
+                loadHandler, false);
+            explosionSound.removeEventListener("canplaythrough",
+                loadHandler, false);
+            //Воспроизведение музыкального файла music
+            mainMenuMusic.play();
+            mainMenuMusic.volume = 0.8;
+        }
+        window.onresize = resizeCanvasAndPlaceCannon
+        resizeCanvasAndPlaceCannon()
+    }
+	
+    //Переменные для стрельбы ракетами
+    var shoot = false;
+    var spaceKeyIsDown = false;
+    //Переменные игры
+    var gameState = LOADING;
+    var alienFrequency = 100;
+    var alienTimer = 0;
+    var sprites = [];
+    var missiles = [];
+    var aliens = [];
+    var alienSpeed = 2.5;
+    //Создание спрайта орудия внизу по центру холста
+    var cannon = Object.create(spacecraft);
+    cannon.sourceWidth = 110;
+    cannon.sourceHeight = 174;
+    sprites.push(cannon);
+    //Подключение обработчиков событий нажатия/отпускания клавиш
+    window.addEventListener("keydown", keydownHandler);
+    window.addEventListener("keyup", keyupHandler);
+	
+	function keydownHandler(event)
+	{
+		switch(event.keyCode)
+		{
+			case SPACE:
+			cannon.speed = 0.2;
+			cannon.friction = 1;
+		}
+	}
+	
+	function keyupHandler(event)
+	{
+		switch(event.keyCode)
+		{
+			case SPACE:
+			cannon.speed = 0;
+			cannon.friction = 0.96;
+			break;
+		}
+	}
+
+    //Запуск цикла анимации игры
+
+    update();
+	
+	function update() {
+        //Цикл анимации
+        requestAnimationFrame(update, canvas);
+        //Выбор дальнейших действий в зависимости от состояния игры
+        switch (gameState) {
+            case LOADING:
+                console.log("Загрузка...");
+                break;
+            case PLAYING:
+                playGame();
+                break;
+            case OVER:
+                endGame();
+                break;
+        }
+        //Отображение игры
+        render();
+    }
+	
+	function render(){
+		//Очистка холста: удаление предыдущего анимационного кадра
+		drawingSurface.clearRect(0, 0, canvas.width, canvas.height);
+		//Отображение спрайтов на холсте
+		 if(sprites.length !== 0)
+		 {
+			for(var i = 0; i < sprites.length; i++)
+			 {
+				 var sprite = sprites[i];
+				 //Сохранение состояния поверхности рисования перед поворотом
+				 drawingSurface.save();
+				 //Поворот поверхности рисования
+				 drawingSurface.translate
+				 (Math.floor(sprite.x + sprite.halfWidth()),
+				 Math.floor(sprite.y + sprite.halfHeight()) );
+				 drawingSurface.rotate(sprite.rotation * Math.PI / 180);
+				 if(sprite.visible)
+				 {
+					 //Отображение спрайта
+					 drawingSurface.drawImage(image,
+					 sprite.sourceX, sprite.sourceY,
+					 sprite.sourceWidth, sprite.sourceHeight,
+					 Math.floor(-sprite.halfWidth()),
+					 Math.floor(−sprite.halfHeight()),
+					 sprite.width, sprite.height);
+				 }
+				 //Восстановление старого состояния поверхности рисования
+				 drawingSurface.restore();
+			 }
+		 }
+	}
+	
+	function playGame()
+	{
+		//Вычисление угла направления от центра ракеты к курсору
+		angle = Math.atan2(mouseY - cannon.centerY(),
+		mouseX - cannon.centerX());
+		//Преобразование значения угла из радиан в градусы
+		cannon.rotation = angle * (180 / Math.PI);
+		//Вычисление ускорения по осям X и Y
+		cannon.accelerationX = Math.cos(angle) * cannon.speed;
+		cannon.accelerationY = Math.sin(angle) * cannon.speed;
+		//Корректировка vx и vy на величину ускорения
+		cannon.vx += cannon.accelerationX;
+		cannon.vy += cannon.accelerationY;
+		//Учет трения
+		cannon.vx *= cannon.friction;
+		cannon.vy *= cannon.friction;
+		//Движение ракеты
+		cannon.x += cannon.vx;
+		cannon.y += cannon.vy;
+	}
+
+	
+    </script>
+  </body>
+</html>

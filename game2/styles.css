@@ -1,0 +1,86 @@
+#stage {
+  position: relative;
+}
+
+.button{
+  width: 48%;
+  height: 35px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  visibility: hidden;
+}
+
+#ui {
+  width: 565px;
+}
+
+canvas {
+  background-color: #00008B;
+  display: block;
+  position: absolute;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  background-color: rgb(100, 100, 100);
+  font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+h1 {
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 40px;
+  margin-bottom: 0;
+}
+
+.label {
+  font-family: sans-serif;
+  /* width: 200px; */
+  text-align: center;
+  background-color: white;
+  border-radius: 5px;
+}
+
+#panel {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#credits {
+    width: auto;
+    background-color: rgba(255, 255, 255, 0);
+    margin-left: 0px;
+}
+
+.label {
+    font-family: sans-serif;
+    margin: 10px;
+    width: 200px;
+    text-align: center;
+    background-color: white;
+    border-radius: 5px;
+}
+
+#credits p {
+  margin: 0;
+}
+
+@media screen and (max-width: 565px) {
+  #ui{
+    width: 96%
+  }
+  canvas{
+    width: 100%
+  }
+  #credits{
+    font-size: 12px;
+  }
